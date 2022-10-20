@@ -5,13 +5,16 @@ import { fetchCountries } from './fetchCountries.js';
 const DEBOUNCE_DELAY = 300;
 const countryList = document.querySelector('.country-list');
 const countryInfo = document.querySelector('.country-info');
+const inputCountry = document.querySelector('#search-box');
+
+inputCountry.addEventListener('input', debounce(onInput, DEBOUNCE_DELAY));
 
 function onInput(evt) {
-  // debugger;
-  let name = evt.target.value.trim();
+  let name = evt.target.value.trim().toLowerCase();
   if (!name) {
     countryList.innerHTML = '';
     countryInfo.innerHTML = '';
+    return;
   }
 
   let data = fetchCountries(name);
@@ -23,23 +26,9 @@ function onInput(evt) {
           'Too many matches found. Please enter a more specific name.'
         );
       } else if (data.length === 1) {
-        const countryInfoData = data[0];
-        countryInfo.innerHTML = `Flags : <img src="${
-          countryInfoData.flags.png
-        }"/><br/>Name : ${countryInfoData.name.common}<br/>
-            Capital : ${countryInfoData.capital}<br/>Population: ${
-          countryInfoData.population
-        }<br/>Languages: ${Object.values(countryInfoData.languages)}`;
-        countryList.innerHTML = '';
-      } else {
-        countryList.innerHTML = data
-          .map(
-            country => `<li class="country-list__item">
-               <img class="country-icon" src="${country.flags.png}"/>
-                <p class="country-name">${country.name.common}</p></li>`
-          )
-          .join('');
-        countryInfo.innerHTML = '';
+        renderCountryInfo(data);
+      } else if (data.length >= 2 && data.length <= 10) {
+        renderCountryList(data);
       }
     })
     .catch(err => {
@@ -48,5 +37,24 @@ function onInput(evt) {
     });
 }
 
-const inputCountry = document.querySelector('#search-box');
-inputCountry.addEventListener('input', debounce(onInput, DEBOUNCE_DELAY));
+function renderCountryInfo(data) {
+  const countryInfoData = data[0];
+  countryInfo.innerHTML = `Flags : <img src="${
+    countryInfoData.flags.png
+  }"/><br/>Name : ${countryInfoData.name.common}<br/>
+            Capital : ${countryInfoData.capital}<br/>Population: ${
+    countryInfoData.population
+  }<br/>Languages: ${Object.values(countryInfoData.languages)}`;
+  countryList.innerHTML = '';
+}
+
+function renderCountryList(data) {
+  countryList.innerHTML = data
+    .map(
+      country => `<li class="country-list__item">
+               <img class="country-icon" src="${country.flags.png}"/>
+                <p class="country-name">${country.name.common}</p></li>`
+    )
+    .join('');
+  countryInfo.innerHTML = '';
+}
